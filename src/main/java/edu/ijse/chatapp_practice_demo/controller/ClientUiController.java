@@ -1,5 +1,6 @@
 package edu.ijse.chatapp_practice_demo.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -79,7 +80,7 @@ public class ClientUiController implements Initializable {
             dataOutputStream.writeInt(byteArray.length);
             dataOutputStream.write(byteArray);
             dataOutputStream.flush();
-            showMassage("you > "+"image sent");
+            showMassage("you > sent image\n");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (URISyntaxException e) {
@@ -96,13 +97,16 @@ public class ClientUiController implements Initializable {
 
             new Thread(()->{
                 try {
-                   while (true){
-                       String message=dataInputStream.readUTF();
-                       if(message.equals("exit")){
-                           showMassage("server exit");
-                           break;
+                   while (true) {
+                       String header = dataInputStream.readUTF();
+                       if (header.equals("TEXT")) {
+                           String message = dataInputStream.readUTF();
+                           if (message.equals("exit")) {
+                               showMassage("server exit");
+                               break;
+                           }
+                           Platform.runLater(() -> showMassage("server > " + message));
                        }
-                       showMassage( "server > "+message);
                    }
 
                 } catch (IOException e) {
@@ -116,6 +120,6 @@ public class ClientUiController implements Initializable {
     }
 
     public void showMassage(String message){
-        chatArea.appendText(message);
+        chatArea.appendText(message + "\n");
     }
 }

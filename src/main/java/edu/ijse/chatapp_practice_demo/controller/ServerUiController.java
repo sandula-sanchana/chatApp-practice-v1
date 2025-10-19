@@ -1,5 +1,6 @@
 package edu.ijse.chatapp_practice_demo.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -35,9 +36,12 @@ public class ServerUiController  implements Initializable {
     @FXML
     void onSend(ActionEvent event) {
         try {
-            dataOutputStream.writeUTF(messageField.getText());
+            String message = messageField.getText();
+            dataOutputStream.writeUTF("TEXT"); // header first
+            dataOutputStream.writeUTF(message);
             dataOutputStream.flush();
-            showMassage("you > "+messageField.getText());
+            showMassage("You: " + message);
+            messageField.clear();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -50,7 +54,7 @@ public class ServerUiController  implements Initializable {
             showMassage("server started");
             localSocket=serverSocket.accept();
             dataInputStream=new DataInputStream(localSocket.getInputStream());
-            dataInputStream=new DataInputStream(localSocket.getInputStream());
+           dataOutputStream=new DataOutputStream(localSocket.getOutputStream());
             showMassage("accepted connection-client connected to server");
             new Thread(()->{
                 while(true){
@@ -73,8 +77,10 @@ public class ServerUiController  implements Initializable {
                             ByteArrayInputStream bais=new ByteArrayInputStream(image);
 
                             Image rImage=new Image(bais);
-                            imageShower.setImage(rImage);
-                            showMassage("image > "+"received the image");
+                            Platform.runLater(() -> {
+                                imageShower.setImage(rImage);
+                                showMassage("client > sent an image\n");
+                            });
                         }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -88,7 +94,7 @@ public class ServerUiController  implements Initializable {
     }
 
     public void showMassage(String message){
-        chatArea.appendText(message);
+        chatArea.appendText(message + "\n");
     }
 }
 
